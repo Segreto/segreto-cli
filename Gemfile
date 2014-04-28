@@ -1,3 +1,3 @@
-source 'https://rubygems.org'
-gem 'rest-client'
-gem 'thor'
+source "https://rubygems.org"
+gem "rest-client"
+gem "thor"
