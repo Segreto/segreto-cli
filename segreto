@@ -1,3 +1,0 @@
-#!/usr/bin/env ruby
-require "./bin/segreto"
-SegretoCLI::Segreto.start(ARGV)

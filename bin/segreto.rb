@@ -1,6 +1,7 @@
+#!/usr/bin/env ruby
 require "thor"
-require "src/api/secret"
-require "src/api/user"
+require "../src/api/secret"
+require "../src/api/user"
 
 module SegretoCLI
   class Account < Thor
@@ -59,3 +60,4 @@ module SegretoCLI
   end
 end  
 
+SegretoCLI::Segreto.start(ARGV)
