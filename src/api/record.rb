@@ -1,83 +1,131 @@
-require 'rest-client'
+require File.dirname(__FILE__) + '/request_helpers.rb'
+require File.dirname(__FILE__) + '/exceptions.rb'
 
-require 'request_helpers.rb'
+module API
+  class Record
+    include RequestHelpers # provides url & authenticated_url
+    extend API::Exceptions
 
-class API::Record
-  include RequestHelpers # provides url & authenticated_url
+    class << self
+      extend API::Exceptions
 
-  attr_accessor :base_route
-
-  # init is called at the end of a call to new by default in Ruby
-  def init params={}
-    # disallow instantiation of the Record abstract class
-    if self.class == Record
-      # is this the best error type? idk...
-      raise NameError.new("Should not instantiate abstract class Record")
-    end
-
-    # set the base route for the resource represented by the class
-    base_route = params[:base_route]
-
-    # create a deserializer for the class for parsing RestClient responses
-    @deserializer = Deserializer.new self.class, params.keys.delete(:base_route)
-
-    @is_new_record = true
-  end
-
-  def self.create params={}
-    self.new(params).save
-  end
-
-  def self.all # we'll need to error here in User - special case
-    RestClient.get authenticated_url
-  end
-
-  def self.find id # and we'll need to override this in User for no id
-    if response = RestClient.get authenticated_url(id)
-      record = self.new @deserializer.parse(response)
-      record.make_old
-      record
-    else
-      raise Error.new("better error class here for missing record")
-    end
-  end
-
-  def save
-    if new_record? #create
-      if RestClient.post authenticated_url, to_params
-        make_old
-      else
-        #error
+      def create params={}
+        new(params).save
       end
-    else #update
-      RestClient.patch authenticated_url(id), to_params 
+
+      # we'll need to error here in User - special case
+      def all
+        response = RestClient.get authenticated_url
+        parse(response).map do |params|
+          record = new params
+          record.make_old
+          record
+        end
+      end
+      translate_exceptions :all
+
+      # and we'll need to override this in User for no id
+      def find id
+        record = new parse(RestClient.get(authenticated_url(id)))
+        record.make_old
+        record
+      end
+      translate_exceptions :find
+
+      def parse response
+        json = JSON.parse response
+        if json.is_a? Array
+          json.map { |o| parse_single o }
+        else
+          parse_single json[to_s.downcase]
+        end
+      end
+
+      def fields
+        # override this to return an array of strings naming the acceptable 
+        # fields for the record type.
+        method_missing :fields
+      end
+
+      private
+
+      def parse_single json
+        params = {}
+        raise FieldLengthMismatchError.new unless json.length == fields.length
+        json.each do |k,v|
+          raise FieldNameMismatchError.new(k) unless fields.include? k
+          params[k.to_sym] = v
+        end
+        params
+      rescue FieldLengthMismatchError
+        wrong_fields = json.keys.inject [] do |wrong_fields, k|
+          wrong_fields << k unless fields.include? k
+          wrong_fields
+        end
+        FieldMismatchError.new("Unexpected fields found in API response: " + wrong_fields)
+      rescue FieldNameMismatchError => e
+        FieldMismatchError.new("Unexpected field #{e.message} found in API response.")
+      end
+
+      class FieldMismatchError < RuntimeError
+      end
+
+      class FieldLengthMismatchError < FieldMismatchError
+      end
+
+      class FieldNameMismatchError < FieldMismatchError
+      end
     end
-  end
 
-  def destroy
-    RestClient.delete authenticated_url(id)
-  end
+    attr_accessor :base_route
 
-  # require child class to override to_params for anything to work
-  def to_params
-    method_missing :to_params
-  end
+    # init is called at the end of a call to new by default in Ruby
+    def initialize params={}
+      # disallow instantiation of the Record abstract class
+      if self.class == Record
+        # is this the best error type? idk...
+        raise NameError.new("Should not instantiate abstract class Record")
+      end
 
-  private
+      # set the base route for the resource represented by the class
+      base_route = params[:base_route]
 
-  def id
-    method_missing :id
-  end
+      @is_new_record = true
+    end
 
-  def new_record?
-    @is_new_record
-  end
+    def save
+      if new_record? #create
+        RestClient.post authenticated_url, to_params
+        make_old
+      else #update
+        RestClient.patch authenticated_url(id), to_params 
+      end
+    end
+    translate_exceptions :save
 
-  def make_old
-    @is_new_record = false
-  end
+    def destroy
+      RestClient.delete authenticated_url(id)
+    end
+    translate_exceptions :destroy
 
-  def self.from_json json
-    self.new @deserializer.parse(json)
+    # require child class to override to_params for anything to work
+    def to_params
+      method_missing :to_params
+    end
+
+    private
+
+    def id
+      # override this to alias to the record-types key field
+      method_missing :id
+    end
+
+    def new_record?
+      @is_new_record
+    end
+
+    def make_old
+      @is_new_record = false
+    end
   end
 end
