@@ -1,1 +1,4 @@
-require "rest-client"
+
+source "https://rubygems.org"
+gem "rest-client"
+gem "thor"
