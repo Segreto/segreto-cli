@@ -27,9 +27,9 @@ class User < API::Record
     super params
   end
 
-  def save
+  def save params={}
     url = authenticated_url(self.class.base_route, id)
-    RestClient.patch url, to_params 
+    RestClient.patch url, to_params.merge(params)
   end
   translate_exceptions :save
 
