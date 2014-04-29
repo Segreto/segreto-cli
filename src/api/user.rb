@@ -13,6 +13,27 @@ class User < API::Record
     %w{username email name remember_token}
   end
 
+  def create params={}
+    new(params).save(params)
+  end
+
+   def find string
+     record = new parse(RestClient.get(url(base_route, id)))
+     record.send(:make_old)
+     record
+   end
+
+  def save params={}
+    if new_record? #create
+      RestClient.post url(self.class.base_route, id), params
+      make_old
+    else #update
+      url = authenticated_url(self.class.base_route, id)
+      RestClient.patch url, to_params 
+    end
+    self
+  end
+
   def to_params
     { username: username,
       name: name,

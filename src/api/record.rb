@@ -92,7 +92,7 @@ module API
       @is_new_record = true
     end
 
-    def save
+    def save params={}
       if new_record? #create
         RestClient.post authenticated_url(self.class.base_route), to_params
         make_old
