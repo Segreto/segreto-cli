@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
-require "thor"
-require "../src/api/secret"
-require "../src/api/user"
+require 'thor'
+#require '../src/api/secret'
+#require '../src/api/user'
 
 module SegretoCLI
   class Account < Thor
@@ -22,14 +22,14 @@ module SegretoCLI
   
   class Segreto < Thor
     #Account Management
-    desc "register username password password_confirmation",
+    desc "register [USER] [PASS] [PASS_CONF]",
          "Register for a new account with Segreto"
     def register(user, pass, pass_conf)
-      puts "#t"
+      User.create
+    rescue  
     end
   
-    desc "login username password",
-         "Login to Segreto"
+    desc "login [USER] [PASS]", "Login to Segreto"
     def login(user,pass)
       puts "#t"
     end
@@ -38,23 +38,23 @@ module SegretoCLI
     subcommand "account", Account
   
     #Secret Management
-    desc "recall SUBCOMMAND ...ARGS", "Recall Secrets"
+    desc "recall [SUBCOMMAND] ...ARGS", "Recall Secrets"
     subcommand "recall", Recall
   
-    desc "remember key secret", "Remember a Secret"
+    desc "remember [KEY] [SECRET]", "Remember a Secret"
     def remember(key, secret)
     end
   
-    desc "revise key new-secret", "Revise an existing Secret with a new one"
+    desc "revise [KEY] [SECRET]", "Revise an existing Secret with a new one"
     def revise(key, new_secret)
     end
   
-    desc "change key new-secret", "Alias \"revise <key> <new-secret>\""
+    desc "change [KEY] [SECRET]", "Alias \"revise <key> <new-secret>\""
     def change(key, new_secret)
       revise(key, new_secret)
     end
   
-    desc "forget key", "Forget an existing key"
+    desc "forget [KEY]", "Forget an existing key"
     def forget(key)
     end
   end
