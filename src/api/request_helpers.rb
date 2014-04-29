@@ -1,9 +1,8 @@
-require 'rest-client'
-#require '../config.rb'
+require './appdata.rb'
 
 module RequestHelpers
   def url base_route, id=nil
-    endpoint = Config.get :api_endpoint
+    endpoint = Appdata.get :api_endpoint
 
     if id
       endpoint + base_route + "/" + id
@@ -19,8 +18,8 @@ module RequestHelpers
   private
 
   def auth_query_string
-    username = Config.get :username
-    token = Config.get :remember_token
+    username = Appdata.get :username
+    token = Appdata.get :remember_token
     "?username=#{username}&remember_token=#{token}"
   end
 end
