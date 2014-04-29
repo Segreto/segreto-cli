@@ -1,1 +1,0 @@
-{"username":"joshcox","remember_token":"wat","api_endpoint":"localhost:3000"}
