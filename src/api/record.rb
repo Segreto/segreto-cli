@@ -7,6 +7,7 @@ module API
     extend API::Exceptions
 
     class << self
+      include RequestHelpers
       extend API::Exceptions
 
       def create params={}
@@ -15,10 +16,10 @@ module API
 
       # we'll need to error here in User - special case
       def all
-        response = RestClient.get authenticated_url
+        response = RestClient.get authenticated_url(base_route+'s')
         parse(response).map do |params|
           record = new params
-          record.make_old
+          record.send(:make_old)
           record
         end
       end
@@ -26,8 +27,8 @@ module API
 
       # and we'll need to override this in User for no id
       def find id
-        record = new parse(RestClient.get(authenticated_url(id)))
-        record.make_old
+        record = new parse(RestClient.get(authenticated_url(base_route, id)))
+        record.send(:make_old)
         record
       end
       translate_exceptions :find
@@ -45,6 +46,10 @@ module API
         # override this to return an array of strings naming the acceptable 
         # fields for the record type.
         method_missing :fields
+      end
+
+      def base_route
+        '/' + self.to_s.downcase
       end
 
       private
@@ -77,9 +82,6 @@ module API
       end
     end
 
-    attr_accessor :base_route
-
-    # init is called at the end of a call to new by default in Ruby
     def initialize params={}
       # disallow instantiation of the Record abstract class
       if self.class == Record
@@ -87,24 +89,25 @@ module API
         raise NameError.new("Should not instantiate abstract class Record")
       end
 
-      # set the base route for the resource represented by the class
-      base_route = params[:base_route]
-
       @is_new_record = true
     end
 
     def save
       if new_record? #create
-        RestClient.post authenticated_url, to_params
+        RestClient.post authenticated_url(self.class.base_route), to_params
         make_old
       else #update
-        RestClient.patch authenticated_url(id), to_params 
+        url = authenticated_url(self.class.base_route, id)
+        RestClient.patch url, to_params 
       end
+      self
     end
     translate_exceptions :save
 
     def destroy
-      RestClient.delete authenticated_url(id)
+      RestClient.delete authenticated_url(self.class.base_route, id)
+      refresh
+      self
     end
     translate_exceptions :destroy
 
@@ -116,7 +119,7 @@ module API
     private
 
     def id
-      # override this to alias to the record-types key field
+      # override this to alias to the record-type's key field
       method_missing :id
     end
 
@@ -126,6 +129,10 @@ module API
 
     def make_old
       @is_new_record = false
+    end
+
+    def refresh
+      @is_new_record = true
     end
   end
 end

@@ -2,7 +2,7 @@ require 'rest-client'
 #require '../config.rb'
 
 module RequestHelpers
-  def url id=nil
+  def url base_route, id=nil
     #endpoint = Config.get :api_endpoint
     endpoint = 'localhost:3000'
 
@@ -13,8 +13,8 @@ module RequestHelpers
     end
   end
 
-  def authenticated_url id=nil
-    url(id) + auth_query_string
+  def authenticated_url base_route, id=nil
+    url(base_route, id) + auth_query_string
   end
 
   private
