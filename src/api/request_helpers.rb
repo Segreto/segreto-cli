@@ -3,8 +3,7 @@ require 'rest-client'
 
 module RequestHelpers
   def url base_route, id=nil
-    #endpoint = Config.get :api_endpoint
-    endpoint = 'localhost:3000'
+    endpoint = Config.get :api_endpoint
 
     if id
       endpoint + base_route + "/" + id
@@ -20,8 +19,8 @@ module RequestHelpers
   private
 
   def auth_query_string
-    username = 'md' #Config.get :username
-    token = 'a' #Config.get :remember_token
+    username = Config.get :username
+    token = Config.get :remember_token
     "?username=#{username}&remember_token=#{token}"
   end
 end
