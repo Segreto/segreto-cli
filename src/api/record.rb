@@ -64,9 +64,9 @@ module API
           wrong_fields << k unless fields.include? k
           wrong_fields
         end
-        FieldMismatchError.new("Unexpected fields found in API response: " + wrong_fields)
+        raise FieldMismatchError.new("Unexpected fields found in API response: " + wrong_fields.to_s)
       rescue FieldNameMismatchError => e
-        FieldMismatchError.new("Unexpected field #{e.message} found in API response.")
+        raise FieldMismatchError.new("Unexpected field #{e.message} found in API response.")
       end
 
       class FieldMismatchError < RuntimeError

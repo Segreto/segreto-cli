@@ -21,22 +21,19 @@ class User < API::Record
     def login params={}
       route = url("#{base_route}/signin?username=#{params[:username]}&password=#{params[:password]}")
       response = RestClient.get route
-      response = JSON.parse response
-      Appdata.set :username, response[:username]
-      Appdata.set :remember_token, response[:remember_token]
 
-      binding.pry
       record = new parse(response)
+
+      Appdata.set :username, record.username
+      Appdata.set :remember_token, record.remember_token
+
       record.send(:make_old)
       record
     end
 
-    def logout
-      user = Appdata.get :username
-      token = Appdata.get :remember_token
-
-      route = url("#{base_route}/signout?username=#{user}&password=#{token}")
-      reponse = RestClient.get route
+    def logout user, token
+      route = url("#{base_route}/signout?username=#{user}&remember_token=#{token}")
+      response = RestClient.get route
       response = JSON.parse response
       Appdata.set :username, nil
       Appdata.set :remember_token, nil
