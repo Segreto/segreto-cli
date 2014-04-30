@@ -1,7 +1,5 @@
 require 'base64'
 
-require './appdata.rb'
-
 class Secret < API::Record
   attr_accessor :key
   attr_reader :encrypted_value
