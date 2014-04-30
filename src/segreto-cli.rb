@@ -11,24 +11,27 @@ module SegretoCLI
       user = User.find
       params = {} 
       if options[:name]
-        puts "New Name: "
+        print "New Name: "
         params[:name] = $stdin.gets.chomp
       end
       if options[:password]
-        puts "New Password: "
-        params[:password] = $stdin.gets.chomp
+        print "New Password: "
+        params[:password] = STDIN.noecho(&:gets).chomp
+        puts "\n"
       end
       if options[:password]
-        puts "Confirm New Password: "
-        params[:password_confirmation] = $stdin.gets.chomp
+        print "Confirm New Password: "
+        params[:password_confirmation] = STDIN.noecho(&:gets).chomp
+        puts "\n"
       end
       if options[:email]
-        puts "New Email: "
+        print "New Email: "
         params[:email] = $stdin.gets.chomp
       end
       if options[:password] || options[:email]
-        puts "Enter old Password: "
-        params[:old_password] = $stdin.gets.chomp
+        print "Enter old Password: "
+        params[:old_password] = STDIN.noecho(&:gets).chomp
+        puts "\n"
       end
 
       if (options[:password] == nil) && (options[:email] == nil)
@@ -36,6 +39,13 @@ module SegretoCLI
       else
         user.save params
       end
+      puts "####################"
+      Helpers.view
+    end
+
+    desc "view", "View your Segreto Account Details"
+    def view
+      Helpers.view
     end
   end
   
@@ -92,10 +102,10 @@ module SegretoCLI
         puts "Registration unsuccessful."
       end
     end
-  
+
     #Secret Management
     desc "change [KEY]", "Alias \"revise <key> <new-secret>\""
-    def change(key, new_secret)
+    def change(key)
       print "New value for #{key}: "
       new_secret = $stdin.gets.chomp
       Helpers.revise key, new_secret
