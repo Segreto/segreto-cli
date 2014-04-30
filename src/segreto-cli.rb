@@ -38,8 +38,6 @@ module SegretoCLI
   
   class Segreto < Thor
     extend Exceptions
-    @user = Appdata.get :username
-    @token = Appdata.get :remember_token
 
     #Account Management
     desc "account SUBCOMMAND ...ARGS", "Edit/Modify a Segreto Account"
@@ -47,36 +45,41 @@ module SegretoCLI
   
     desc "login [USER] [PASS]", "Login to Segreto"
     def login(user, pass)
-      user = User.login username: user, password: pass
-      puts "Login Successful" if user
+      Helpers.login username: user, password: pass
     end
     translate_exceptions :login
 
     desc "logout", "Logout of Segreto"
     def logout
-      if @token == nil || @user == nil
+      user = Appdata.get :username
+      token = Appdata.get :remember_token
+      if (user == nil) || (token == nil)
         Appdata.set :username, nil
         Appdata.set :remember_token, nil
         puts "Already Logged Out"
       else
-        response = User.logout
-        puts response
+        response = User.logout user, token
+        if response
+          puts "Successfully Logged Out."
+        end
       end
     end
   
     desc "register [USER] [PASS] [PASS_CONF]",
          "Register for a new account with Segreto"
     def register(user, pass, pass_conf)
-      User.create :username => user, :password => pass, :password_confirmation => pass_conf
+      u = User.create :username => user, 
+                         :password => pass, 
+                         :password_confirmation => pass_conf
+      if u
+        puts "Registration successful. Welcome, #{u.username}!"
+        puts "Please wait while we log you in."
+        Helpers.login username: user, password: pass
+      else
+        puts "Registration unsuccessful."
+      end
     end
     translate_exceptions :register
-  
-    desc "remember [KEY] [SECRET]", "Remember a Secret"
-    def remember(key, secret)
-      sec = Secret.create key: key, value: secret
-      recall key
-    end
-    translate_exceptions :remember
   
     #Secret Management
     desc "change [KEY] [SECRET]", "Alias \"revise <key> <new-secret>\""
@@ -89,7 +92,7 @@ module SegretoCLI
     def forget(key)
       sec = Secret.find key
       puts "Are you sure? y/n"
-      ans = gets.chomp
+      ans = $stdin.gets.chomp
       if ans == "y"
         sec.destroy
       end
@@ -98,9 +101,20 @@ module SegretoCLI
     translate_exceptions :forget
     desc "recall key", "Recall Secrets"
     option :all
-    def recall(key)
+    def recall(key=nil)
+      if options[:all]
+        Helpers.recall_all
+      else
+        Helpers.recall key
+      end
+    end
+  
+    desc "remember [KEY] [SECRET]", "Remember a Secret"
+    def remember(key, secret)
+      sec = Secret.create key: key, value: secret
       Helpers.recall key
     end
+    translate_exceptions :remember
   
     desc "revise [KEY] [SECRET]", "Revise an existing Secret with a new one"
     def revise(key, new_secret)
