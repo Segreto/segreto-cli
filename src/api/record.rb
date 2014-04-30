@@ -1,6 +1,3 @@
-require File.dirname(__FILE__) + '/request_helpers.rb'
-require File.dirname(__FILE__) + '/exceptions.rb'
-
 module API
   class Record
     include RequestHelpers # provides url & authenticated_url
