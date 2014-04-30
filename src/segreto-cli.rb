@@ -111,7 +111,7 @@ module SegretoCLI
   
     desc "remember [KEY] [SECRET]", "Remember a Secret"
     def remember(key, secret)
-      sec = Secret.create key: key, value: secret
+      sec = Secret.create key: key, value: secret, plaintext: true
       Helpers.recall key
     end
     translate_exceptions :remember
