@@ -50,6 +50,14 @@ class User < API::Record
     super params
   end
 
+  def unauth_save params={}
+    url = authenticated_url(self.class.base_route, id)
+    params = to_params.merge(params)
+    params.delete(:remember_token)
+    binding.pry
+    RestClient.patch url, params
+  end
+
   def save params={}
     url = authenticated_url(self.class.base_route, id)
     RestClient.patch url, to_params.merge(params)

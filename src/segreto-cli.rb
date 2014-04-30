@@ -1,8 +1,8 @@
+require 'io/console'
+
 module SegretoCLI
   
   class Account < Thor
-    extend Exceptions
-  
     desc "edit", "Edit a value without password validation"
     option :name
     option :password
@@ -12,42 +12,47 @@ module SegretoCLI
       params = {} 
       if options[:name]
         puts "New Name: "
-        params[:name] = gets.chomp
+        params[:name] = $stdin.gets.chomp
       end
       if options[:password]
         puts "New Password: "
-        params[:password] = gets.chomp
+        params[:password] = $stdin.gets.chomp
       end
       if options[:password]
         puts "Confirm New Password: "
-        params[:password_confirmation] = gets.chomp
+        params[:password_confirmation] = $stdin.gets.chomp
       end
       if options[:email]
         puts "New Email: "
-        params[:email] = gets.chomp
+        params[:email] = $stdin.gets.chomp
       end
       if options[:password] || options[:email]
         puts "Enter old Password: "
-        params[:old_password] = gets.chomp
+        params[:old_password] = $stdin.gets.chomp
       end
 
-      user.save params
+      if (options[:password] == nil) && (options[:email] == nil)
+        user.unauth_save params
+      else
+        user.save params
+      end
     end
-    translate_exceptions :edit
   end
   
   class Segreto < Thor
-    extend Exceptions
-
     #Account Management
     desc "account SUBCOMMAND ...ARGS", "Edit/Modify a Segreto Account"
     subcommand "account", Account
   
-    desc "login [USER] [PASS]", "Login to Segreto"
-    def login(user, pass)
+    desc "login", "Login to Segreto"
+    def login
+      print "Username: "
+      user = $stdin.gets.chomp
+      print "Password: "
+      pass = STDIN.noecho(&:gets).chomp
+      puts "\n"
       Helpers.login username: user, password: pass
     end
-    translate_exceptions :login
 
     desc "logout", "Logout of Segreto"
     def logout
@@ -65,9 +70,17 @@ module SegretoCLI
       end
     end
   
-    desc "register [USER] [PASS] [PASS_CONF]",
+    desc "register",
          "Register for a new account with Segreto"
-    def register(user, pass, pass_conf)
+    def register
+      print "Username: "
+      user = $stdin.gets.chomp
+      print "Password: "
+      pass = STDIN.noecho(&:gets).chomp
+      puts "\n"
+      print "Password Confirmation: "
+      pass_conf = STDIN.noecho(&:gets).chomp
+      puts "\n"
       u = User.create :username => user, 
                          :password => pass, 
                          :password_confirmation => pass_conf
@@ -79,14 +92,14 @@ module SegretoCLI
         puts "Registration unsuccessful."
       end
     end
-    translate_exceptions :register
   
     #Secret Management
-    desc "change [KEY] [SECRET]", "Alias \"revise <key> <new-secret>\""
+    desc "change [KEY]", "Alias \"revise <key> <new-secret>\""
     def change(key, new_secret)
+      print "New value for #{key}: "
+      new_secret = $stdin.gets.chomp
       Helpers.revise key, new_secret
     end
-    translate_exceptions :change
   
     desc "forget [KEY]", "Forget an existing key"
     def forget(key)
@@ -98,7 +111,6 @@ module SegretoCLI
       end
     end
 
-    translate_exceptions :forget
     desc "recall key", "Recall Secrets"
     option :all
     def recall(key=nil)
@@ -114,12 +126,12 @@ module SegretoCLI
       sec = Secret.create key: key, value: secret
       Helpers.recall key
     end
-    translate_exceptions :remember
   
-    desc "revise [KEY] [SECRET]", "Revise an existing Secret with a new one"
-    def revise(key, new_secret)
+    desc "revise [KEY]", "Revise an existing Secret with a new one"
+    def revise key
+      print "New value for #{key}: "
+      new_secret = $stdin.gets.chomp
       Helpers.revise key, new_secret
     end
-    translate_exceptions :revise
   end
 end  
