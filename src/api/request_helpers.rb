@@ -1,9 +1,11 @@
+require 'open-uri'
+
 module RequestHelpers
   def url base_route, id=nil
     endpoint = Appdata.get :api_endpoint
 
     if id
-      endpoint + base_route + "/" + id
+      endpoint + base_route + "/" + URI::encode(id)
     else
       endpoint + base_route
     end
