@@ -1,6 +1,3 @@
-require File.dirname(__FILE__) + '/request_helpers.rb'
-require File.dirname(__FILE__) + '/exceptions.rb'
-
 module API
   class Record
     include RequestHelpers # provides url & authenticated_url
@@ -67,9 +64,9 @@ module API
           wrong_fields << k unless fields.include? k
           wrong_fields
         end
-        FieldMismatchError.new("Unexpected fields found in API response: " + wrong_fields.join(', '))
+        raise FieldMismatchError.new("Unexpected fields found in API response: " + wrong_fields.join(', '))
       rescue FieldNameMismatchError => e
-        FieldMismatchError.new("Unexpected field #{e.message} found in API response.")
+        raise FieldMismatchError.new("Unexpected field #{e.message} found in API response.")
       end
 
       class FieldMismatchError < RuntimeError

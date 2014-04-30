@@ -1,5 +1,3 @@
-require './appdata.rb'
-
 module RequestHelpers
   def url base_route, id=nil
     endpoint = Appdata.get :api_endpoint

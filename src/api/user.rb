@@ -17,6 +17,29 @@ class User < API::Record
     def fields
       %w{username email name remember_token}
     end
+    
+    def login params={}
+      route = url("#{base_route}/signin?username=#{params[:username]}&password=#{params[:password]}")
+      response = RestClient.get route
+
+      record = new parse(response)
+
+      Appdata.set :username, record.username
+      Appdata.set :remember_token, record.remember_token
+
+      record.send(:make_old)
+      record
+    end
+
+    def logout user, token
+      route = url("#{base_route}/signout?username=#{user}&remember_token=#{token}")
+      response = RestClient.get route
+      response = JSON.parse response
+      Appdata.set :username, nil
+      Appdata.set :remember_token, nil
+
+      response
+    end
   end
 
   def initialize params={}
