@@ -24,4 +24,11 @@ module Helpers
     sec.value = new_secret
     sec.save
   end
+
+  def view
+    u = User.find
+    puts "Username: " + u.username.to_s
+    puts "Email:    " + u.email.to_s
+    puts "Name:     " + u.name.to_s
+  end
 end
